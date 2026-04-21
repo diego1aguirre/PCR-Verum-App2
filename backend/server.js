@@ -165,7 +165,7 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     ].join('\r\n')
 
     const resend = getResend()
-    const { error: sendError } = await resend.emails.send({
+    const { data, error: sendError } = await resend.emails.send({
       from: 'onboarding@resend.dev',
       to: toList,
       subject: fullTitle,
@@ -182,15 +182,17 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       ],
     })
 
+    console.log('Resend response:', JSON.stringify(data, null, 2))
+    console.log('Resend error:', JSON.stringify(sendError, null, 2))
+
     if (sendError) {
-      console.error('Resend error:', sendError)
-      return res.status(500).json({ error: sendError.message ?? 'Failed to send email.' })
+      return res.status(500).json({ error: sendError.message ?? JSON.stringify(sendError) })
     }
 
     return res.json({ success: true })
   } catch (err) {
     console.error('Error sending email:', err)
-    return res.status(500).json({ error: 'Failed to send email.' })
+    return res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to send email.' })
   }
 })
 
