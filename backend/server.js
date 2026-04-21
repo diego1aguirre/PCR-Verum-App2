@@ -2,15 +2,15 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
-const EMAIL_USER = process.env.EMAIL_USER
-const EMAIL_PASS = process.env.EMAIL_PASS
 const EMAIL_TO = 'diego1992aguirre@gmail.com'
 const TIMEZONE = 'America/Mexico_City'
+
+const getResend = () => new Resend(process.env.RESEND_API_KEY)
 
 let _supabase = null
 function getSupabase() {
@@ -24,10 +24,6 @@ function getSupabase() {
 }
 
 const upload = multer({ storage: multer.memoryStorage() })
-
-if (!EMAIL_USER || !EMAIL_PASS) {
-  console.warn('Warning: EMAIL_USER or EMAIL_PASS is not set in the environment.')
-}
 
 const FRONTEND_URL = process.env.FRONTEND_URL
 app.use(cors({
@@ -74,8 +70,8 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     if (!subject || !date || !time || !file) {
       return res.status(400).json({ error: 'subject, date, time and pdf file are required.' })
     }
-    if (!EMAIL_USER || !EMAIL_PASS) {
-      return res.status(500).json({ error: 'Email credentials are not configured on the server.' })
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(500).json({ error: 'RESEND_API_KEY is not configured on the server.' })
     }
 
     // Date/time formatting
@@ -106,7 +102,7 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     const trimmedCustom = customMessage && String(customMessage).trim()
 
     // Teams link from Supabase
-    const { data: configRow } = await supabase
+    const { data: configRow } = await getSupabase()
       .from('config')
       .select('value')
       .eq('key', 'meeting_link')
@@ -161,27 +157,35 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       `DTEND;TZID=${TIMEZONE}:${dtEndLocal}`,
       `SUMMARY:${fullTitle}`,
       `DESCRIPTION:${textForEmail.replace(/\n/g, '\\n')}`,
-      `ORGANIZER;CN=Verum Committee:mailto:${EMAIL_USER}`,
+      'ORGANIZER;CN=Verum Committee:mailto:onboarding@resend.dev',
       `ATTENDEE;CN=Diego Aguirre;ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:${EMAIL_TO}`,
       'END:VEVENT',
       'END:VCALENDAR',
       '',
     ].join('\r\n')
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+    const resend = getResend()
+    const { error: sendError } = await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: toList,
+      subject: fullTitle,
+      html: htmlForEmail,
+      attachments: [
+        {
+          filename: file.originalname,
+          content: file.buffer.toString('base64'),
+        },
+        {
+          filename: 'invite.ics',
+          content: Buffer.from(icsContent).toString('base64'),
+        },
+      ],
     })
 
-    await transporter.sendMail({
-      from: EMAIL_USER,
-      to: toList.join(', '),
-      subject: fullTitle,
-      text: textForEmail,
-      html: htmlForEmail,
-      icalEvent: { filename: 'invite.ics', method: 'REQUEST', content: icsContent },
-      attachments: [{ filename: file.originalname, content: file.buffer }],
-    })
+    if (sendError) {
+      console.error('Resend error:', sendError)
+      return res.status(500).json({ error: sendError.message ?? 'Failed to send email.' })
+    }
 
     return res.json({ success: true })
   } catch (err) {
@@ -228,7 +232,7 @@ app.get('/api/mail/config', async (_req, res) => {
 app.put('/api/mail/config', async (req, res) => {
   const { meeting_link } = req.body
   if (!meeting_link) return res.status(400).json({ error: 'meeting_link is required' })
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('config')
     .upsert({ key: 'meeting_link', value: meeting_link }, { onConflict: 'key' })
   if (error) return res.status(500).json({ error: error.message })
