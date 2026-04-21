@@ -31,7 +31,7 @@ from pdf_pipeline import build_merged_pdf
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/flask/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}})
 
 # 50 MB — the higher of the two original limits
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
@@ -80,14 +80,14 @@ def _convert_docx_to_pdf_soffice(docx_path: str, out_dir: str) -> str:
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 
-@app.get('/flask/health')
+@app.route('/flask/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok', 'service': 'flask'})
 
 
 # ─── Comunicado ──────────────────────────────────────────────────────────────
 
-@app.post('/flask/comunicado/process')
+@app.route('/flask/comunicado/process', methods=['POST', 'OPTIONS'])
 def comunicado_process():
     """
     Accepts multipart form-data:
@@ -163,7 +163,7 @@ def comunicado_process():
 
 # ─── Merge PDF ───────────────────────────────────────────────────────────────
 
-@app.post('/flask/merge/merge')
+@app.route('/flask/merge/merge', methods=['POST', 'OPTIONS'])
 def merge_merge():
     """
     Accepts multipart form-data:
@@ -216,6 +216,9 @@ def merge_merge():
 
 
 # ─── Entry point ─────────────────────────────────────────────────────────────
+
+with app.app_context():
+    print([str(rule) for rule in app.url_map.iter_rules()])
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
