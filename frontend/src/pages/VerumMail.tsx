@@ -77,12 +77,12 @@ export default function VerumMail() {
 
   // Load recipients + meeting link on mount
   useEffect(() => {
-    fetch('/api/mail/recipients')
+    fetch(`${import.meta.env.VITE_API_URL}/api/mail/recipients`)
       .then((r) => r.json())
       .then((data: Recipient[]) => setRecipients(Array.isArray(data) ? data : []))
       .catch(() => {})
 
-    fetch('/api/mail/config')
+    fetch(`${import.meta.env.VITE_API_URL}/api/mail/config`)
       .then((r) => r.json())
       .then((data: { meeting_link: string }) => {
         if (data?.meeting_link) {
@@ -149,7 +149,7 @@ export default function VerumMail() {
       formData.append('pdf', pdfFile)
       formData.append('recipients', JSON.stringify(recipients.map((r) => r.email)))
 
-      const res = await fetch('/api/mail/send', { method: 'POST', body: formData })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/mail/send`, { method: 'POST', body: formData })
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok || !data?.success) {
@@ -186,7 +186,7 @@ export default function VerumMail() {
     }
     setRecipientStatus(null)
     try {
-      const res = await fetch('/api/mail/recipients', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/mail/recipients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: trimmed }),
@@ -205,7 +205,7 @@ export default function VerumMail() {
 
   async function handleRemoveRecipient(id: string) {
     try {
-      await fetch(`/api/mail/recipients/${id}`, { method: 'DELETE' })
+      await fetch(`${import.meta.env.VITE_API_URL}/api/mail/recipients/${id}`, { method: 'DELETE' })
       setRecipients((prev) => prev.filter((r) => r.id !== id))
     } catch {
       // silently ignore — UI already optimistic-updates on success
@@ -220,7 +220,7 @@ export default function VerumMail() {
     setLinkSaving(true)
     setLinkStatus(null)
     try {
-      const res = await fetch('/api/mail/config', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/mail/config`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ meeting_link: trimmed }),

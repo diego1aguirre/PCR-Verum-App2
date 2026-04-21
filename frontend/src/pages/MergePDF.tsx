@@ -104,7 +104,7 @@ export default function MergePDF() {
     const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000)
 
     try {
-      const res = await fetch('/flask/merge/merge', {
+      const res = await fetch(`${import.meta.env.VITE_FLASK_URL}/flask/merge/merge`, {
         method: 'POST',
         body: formData,
         signal: controller.signal,

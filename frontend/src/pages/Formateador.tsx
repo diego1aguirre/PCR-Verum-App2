@@ -103,7 +103,7 @@ export default function Formateador() {
         formData.append('plain', opts.plain)
         formData.append('pdf', opts.pdf)
 
-        const res = await fetch('/flask/comunicado/process', { method: 'POST', body: formData })
+        const res = await fetch(`${import.meta.env.VITE_FLASK_URL}/flask/comunicado/process`, { method: 'POST', body: formData })
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
