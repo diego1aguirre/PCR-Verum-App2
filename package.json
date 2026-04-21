@@ -1,0 +1,14 @@
+{
+  "name": "pcr-verum",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:flask": "cd flask && python3 -m flask --app app run --port 5000 --debug",
+    "dev": "concurrently -n frontend,backend,flask -c cyan,green,yellow \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:flask\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

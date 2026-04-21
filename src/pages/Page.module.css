@@ -1,0 +1,25 @@
+.page {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #231F20;
+}
+
+.placeholder {
+  font-size: 14px;
+  color: #808184;
+  margin-bottom: 1.25rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}

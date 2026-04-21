@@ -1,0 +1,226 @@
+/* Fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #808184;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* Add file row */
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #231F20;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.addBtn:hover {
+  background: #3a3535;
+}
+
+.hint {
+  font-size: 12px;
+  color: #808184;
+}
+
+/* File list */
+.fileList {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 0.5px solid #e0ddd8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 0.5px solid #e0ddd8;
+  background: #fff;
+  transition: background 0.1s;
+}
+
+.fileItem:last-child {
+  border-bottom: none;
+}
+
+.fileItem:hover {
+  background: #fafaf9;
+}
+
+.fileNum {
+  font-size: 12px;
+  color: #b0aead;
+  min-width: 1.25rem;
+  flex-shrink: 0;
+}
+
+.fileBadge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: #f0eeec;
+  color: #808184;
+}
+
+.fileBadge[data-ext="PDF"] {
+  background: #FEF0E6;
+  color: #d4600a;
+}
+
+.fileBadge[data-ext="DOCX"] {
+  background: #E8F0FE;
+  color: #1a56c4;
+}
+
+.fileName {
+  flex: 1;
+  font-size: 13px;
+  color: #231F20;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.fileActions {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.moveBtn {
+  background: none;
+  border: none;
+  color: #808184;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.12s, background 0.12s;
+}
+
+.moveBtn:hover:not(:disabled) {
+  color: #F48220;
+  background: #FEF8F2;
+}
+
+.moveBtn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: #b0aead;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.25rem;
+  transition: color 0.12s;
+}
+
+.removeBtn:hover {
+  color: #c0392b;
+  text-decoration: underline;
+}
+
+/* Checkboxes */
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  font-size: 13.5px;
+  color: #231F20;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: #F48220;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Loading */
+.loadingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 13px;
+  color: #808184;
+  margin-bottom: 0.75rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e0ddd8;
+  border-top-color: #F48220;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Status */
+.msgOk {
+  font-size: 13px;
+  color: #08A698;
+  margin: 0 0 0.75rem;
+}
+
+.msgErr {
+  font-size: 13px;
+  color: #c0392b;
+  margin: 0 0 0.75rem;
+}

@@ -1,0 +1,22 @@
+# Web framework
+flask>=3.0.0
+flask-cors>=4.0.0
+python-dotenv>=1.0.0
+
+# Comunicado: DOCX processing
+python-docx>=1.1.0
+lxml>=5.0.0
+
+# Merge PDF: PDF reading/writing and page number overlays
+pypdf>=4.0.0
+reportlab>=4.0.0
+
+# Merge PDF: DOCX→PDF conversion (tries LibreOffice first, then this)
+# docx2pdf uses Word on Windows/Mac; on Linux LibreOffice is the only option
+docx2pdf>=0.1.8
+
+# System dependency (not a pip package):
+#   LibreOffice must be installed for DOCX→PDF conversion and Comunicado PDF output.
+#   macOS:  brew install --cask libreoffice
+#   Linux:  apt-get install libreoffice
+#   Override binary path with: SOFFICE_PATH=/path/to/soffice
