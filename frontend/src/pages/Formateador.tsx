@@ -33,7 +33,8 @@ export default function Formateador() {
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
   const [wantPlain, setWantPlain] = useState(true)
-  const [wantPdf, setWantPdf] = useState(false)
+  const [wantPdf, setWantPdf] = useState(true)
+  const [outputName, setOutputName] = useState('ComPrensa_')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -91,10 +92,16 @@ export default function Formateador() {
     setLoading(true)
     setError(null)
 
+    // Resolve output base name — fall back to file's own name if field is blank or just the prefix
+    const trimmedName = outputName.trim()
+    const baseName = (trimmedName && trimmedName !== 'ComPrensa_')
+      ? trimmedName
+      : file.name.replace(/\.docx$/i, '')
+
     // Build list of requests (one per selected output, same as original)
     const requests: Array<{ plain: string; pdf: string; fallback: string }> = []
-    if (wantPlain) requests.push({ plain: 'true',  pdf: 'false', fallback: 'comunicado_plain.docx' })
-    if (wantPdf)   requests.push({ plain: 'false', pdf: 'true',  fallback: 'comunicado.pdf' })
+    if (wantPlain) requests.push({ plain: 'true',  pdf: 'false', fallback: `${baseName}.docx` })
+    if (wantPdf)   requests.push({ plain: 'false', pdf: 'true',  fallback: `${baseName}.pdf` })
 
     try {
       for (const opts of requests) {
@@ -197,6 +204,24 @@ export default function Formateador() {
             PDF
             <span className={m.badge}>PDF</span>
           </label>
+        </div>
+
+        {/* Output filename */}
+        <div className={m.field}>
+          <label className={m.label} htmlFor="output-name">Nombre del archivo</label>
+          <input
+            id="output-name"
+            className="form-input"
+            type="text"
+            value={outputName}
+            onChange={(e) => setOutputName(e.target.value)}
+            placeholder="ComPrensa_"
+            autoComplete="off"
+            onFocus={(e) => {
+              const len = e.target.value.length
+              e.target.setSelectionRange(len, len)
+            }}
+          />
         </div>
 
         {/* Loading */}
