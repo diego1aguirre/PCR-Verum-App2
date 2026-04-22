@@ -45,7 +45,26 @@ export default function MergePDF() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [dragging, setDragging] = useState(false)
   const pickerRef = useRef<HTMLInputElement>(null)
+
+  // ── Drag handlers ───────────────────────────────────────────────────────────
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault()
+    setDragging(false)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragging(false)
+    addFiles(e.dataTransfer.files)
+  }
 
   // ── Queue mutations ─────────────────────────────────────────────────────────
 
@@ -143,25 +162,30 @@ export default function MergePDF() {
 
       <form className="card" onSubmit={handleSubmit}>
 
-        {/* File picker */}
+        {/* Drop zone */}
         <div className={m.field}>
           <span className={m.label}>Archivos</span>
-          <div className={m.addRow}>
-            <button
-              type="button"
-              className={m.addBtn}
-              onClick={() => pickerRef.current?.click()}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          <div
+            className={`${m.dropZone} ${dragging ? m.dropZoneOver : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => pickerRef.current?.click()}
+          >
+            <div className={m.dropPrompt}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
               </svg>
-              Agregar archivos
-            </button>
-            <span className={m.hint}>
-              {queue.length === 0
-                ? 'Selecciona uno o más archivos PDF o Word.'
-                : `${queue.length} archivo${queue.length > 1 ? 's' : ''} — el orden es el orden de combinación.`}
-            </span>
+              <span>
+                {queue.length === 0
+                  ? <>Elige uno o más archivos o <u>arrástralos aquí</u></>
+                  : <>Agregar más archivos o <u>arrástralos aquí</u></>}
+              </span>
+              <span className={m.dropHint}>.pdf, .docx</span>
+            </div>
           </div>
           <input
             ref={pickerRef}
@@ -169,7 +193,7 @@ export default function MergePDF() {
             accept=".pdf,.docx"
             multiple
             className={m.hiddenInput}
-            onChange={(e) => addFiles(e.target.files)}
+            onChange={(e) => { addFiles(e.target.files); if (pickerRef.current) pickerRef.current.value = '' }}
           />
         </div>
 
