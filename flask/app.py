@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import tempfile
 import uuid
+import zipfile
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -119,6 +120,9 @@ def comunicado_process():
     original_path = os.path.join(work_dir, 'original.docx')
     file.save(original_path)
 
+    # Base name derived from the uploaded filename (used for all outputs)
+    upload_stem = os.path.splitext(file.filename)[0]
+
     # ── Plain .docx (reformatted) ─────────────────────────────────────────
     final_docx, docx_filename = None, None
     if want_plain:
@@ -130,22 +134,33 @@ def comunicado_process():
         final_docx = os.path.join(work_dir, docx_filename)
         os.rename(docx_output, final_docx)
 
-    # ── PDF (original input converted directly) ───────────────────────────
+    # ── PDF — always from the ORIGINAL uploaded file, never the reformatted version ──
     pdf_path, pdf_filename = None, None
     if want_pdf:
+        pdf_filename = upload_stem + '.pdf'
         try:
-            pdf_path = _convert_docx_to_pdf_soffice(original_path, work_dir)
+            raw_pdf = _convert_docx_to_pdf_soffice(original_path, work_dir)
         except Exception as e:
             return jsonify({'error': f'PDF conversion failed: {e}'}), 500
-        base_name = (
-            os.path.splitext(docx_filename)[0] if docx_filename
-            else os.path.splitext(file.filename)[0]
-        )
-        pdf_filename = base_name + '.pdf'
-        os.rename(pdf_path, os.path.join(work_dir, pdf_filename))
         pdf_path = os.path.join(work_dir, pdf_filename)
+        os.rename(raw_pdf, pdf_path)
 
     # ── Return ────────────────────────────────────────────────────────────
+    if want_plain and want_pdf:
+        # Bundle both outputs into a single ZIP
+        zip_filename = f'{upload_stem}_outputs.zip'
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.write(final_docx, docx_filename)
+            zf.write(pdf_path, pdf_filename)
+        zip_buf.seek(0)
+        return send_file(
+            zip_buf,
+            as_attachment=True,
+            download_name=zip_filename,
+            mimetype='application/zip',
+        )
+
     if want_plain:
         return send_file(
             final_docx,
@@ -153,6 +168,7 @@ def comunicado_process():
             download_name=docx_filename,
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         )
+
     return send_file(
         pdf_path,
         as_attachment=True,
