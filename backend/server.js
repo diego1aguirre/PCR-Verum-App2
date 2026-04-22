@@ -127,7 +127,7 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       : ''
     const teamsHtml =
       `<p style="font-size:15pt;font-weight:bold;">Reunión de Microsoft Teams<br />` +
-      `Unirse: <a href="${meetingLink}">${meetingLink}</a></p>` +
+      `<a href="${meetingLink}">Unirse a la reunión</a></p>` +
       '<p>Saludos,</p>'
     const htmlForEmail = `${baseHtml}${customHtml}${teamsHtml}`
 
