@@ -98,29 +98,29 @@ export default function Formateador() {
       ? trimmedName
       : file.name.replace(/\.docx$/i, '')
 
-    // Single request — flask handles the combination and returns zip when both are selected
-    const fallback = wantPlain && wantPdf
-      ? `${baseName}_outputs.zip`
-      : wantPlain
-        ? `${baseName}.docx`
-        : `${baseName}.pdf`
+    // Build list of requests — one per selected output, each triggers its own download
+    const requests: Array<{ plain: string; pdf: string; fallback: string }> = []
+    if (wantPlain) requests.push({ plain: 'true',  pdf: 'false', fallback: `${baseName}.docx` })
+    if (wantPdf)   requests.push({ plain: 'false', pdf: 'true',  fallback: `${baseName}.pdf` })
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('plain', wantPlain ? 'true' : 'false')
-      formData.append('pdf', wantPdf ? 'true' : 'false')
+      for (const opts of requests) {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('plain', opts.plain)
+        formData.append('pdf', opts.pdf)
 
-      const res = await fetch(`${import.meta.env.VITE_FLASK_URL}/flask/comunicado/process`, { method: 'POST', body: formData })
+        const res = await fetch(`${import.meta.env.VITE_FLASK_URL}/flask/comunicado/process`, { method: 'POST', body: formData })
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error((data as { error?: string }).error || `Error ${res.status}`)
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error((data as { error?: string }).error || `Error ${res.status}`)
+        }
+
+        const blob = await res.blob()
+        const filename = filenameFromDisposition(res.headers.get('Content-Disposition'), opts.fallback)
+        triggerDownload(blob, filename)
       }
-
-      const blob = await res.blob()
-      const filename = filenameFromDisposition(res.headers.get('Content-Disposition'), fallback)
-      triggerDownload(blob, filename)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {

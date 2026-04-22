@@ -19,7 +19,6 @@ import shutil
 import subprocess
 import tempfile
 import uuid
-import zipfile
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -146,21 +145,6 @@ def comunicado_process():
         os.rename(raw_pdf, pdf_path)
 
     # ── Return ────────────────────────────────────────────────────────────
-    if want_plain and want_pdf:
-        # Bundle both outputs into a single ZIP
-        zip_filename = f'{upload_stem}_outputs.zip'
-        zip_buf = io.BytesIO()
-        with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
-            zf.write(final_docx, docx_filename)
-            zf.write(pdf_path, pdf_filename)
-        zip_buf.seek(0)
-        return send_file(
-            zip_buf,
-            as_attachment=True,
-            download_name=zip_filename,
-            mimetype='application/zip',
-        )
-
     if want_plain:
         return send_file(
             final_docx,
