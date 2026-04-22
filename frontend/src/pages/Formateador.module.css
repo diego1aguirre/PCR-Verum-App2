@@ -7,34 +7,34 @@
 }
 
 .label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #808184;
-  letter-spacing: 0.04em;
+  color: #555;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 /* Drop zone */
 .dropZone {
-  border: 1.5px dashed #e0ddd8;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 1.75rem 1rem;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
-  background: #fafaf9;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .dropZone:hover,
 .dropZoneOver {
   border-color: #F48220;
-  background: #FEF8F2;
+  background: rgba(244, 130, 32, 0.07);
 }
 
 .dropZoneHasFile {
   cursor: default;
   border-style: solid;
-  border-color: #e0ddd8;
-  background: #fff;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
   padding: 1rem;
 }
 
@@ -43,7 +43,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  color: #808184;
+  color: #666;
   font-size: 13px;
   text-align: center;
 }
@@ -56,7 +56,7 @@
 
 .dropHint {
   font-size: 11px;
-  color: #b0aead;
+  color: #555;
 }
 
 .fileRow {
@@ -76,7 +76,7 @@
 .fileName {
   font-size: 13px;
   font-weight: 500;
-  color: #231F20;
+  color: #E0E0E0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -84,13 +84,13 @@
 
 .fileSize {
   font-size: 11px;
-  color: #808184;
+  color: #666;
 }
 
 .clearBtn {
   background: none;
   border: none;
-  color: #808184;
+  color: #555;
   font-size: 13px;
   cursor: pointer;
   padding: 0.2rem 0.4rem;
@@ -100,7 +100,7 @@
 }
 
 .clearBtn:hover {
-  color: #c0392b;
+  color: #F87171;
 }
 
 .hiddenInput {
@@ -114,7 +114,7 @@
   gap: 0.5rem;
   padding: 0.4rem 0;
   font-size: 13.5px;
-  color: #231F20;
+  color: #E0E0E0;
   cursor: pointer;
   user-select: none;
 }
@@ -131,8 +131,8 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  background: #f0eeec;
-  color: #808184;
+  background: rgba(255, 255, 255, 0.07);
+  color: #888;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
 }
@@ -143,7 +143,7 @@
   align-items: center;
   gap: 0.6rem;
   font-size: 13px;
-  color: #808184;
+  color: #888;
   margin-bottom: 0.75rem;
 }
 
@@ -151,7 +151,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid #e0ddd8;
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-top-color: #F48220;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -165,6 +165,6 @@
 /* Status */
 .msgErr {
   font-size: 13px;
-  color: #c0392b;
+  color: #F87171;
   margin: 0 0 0.75rem;
 }

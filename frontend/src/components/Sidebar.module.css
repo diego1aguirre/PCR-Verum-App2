@@ -1,34 +1,36 @@
 .sidebar {
-  width: 210px;
-  min-width: 210px;
+  width: 216px;
+  min-width: 216px;
   height: 100vh;
-  background: #FFFFFF;
-  border-right: 0.5px solid #e0ddd8;
+  background: #1A1A1A;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .logoWrap {
-  padding: 1.25rem;
-  border-bottom: 0.5px solid #e0ddd8;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
 }
 
 .logo {
-  max-width: 140px;
+  max-width: 130px;
   height: auto;
   display: block;
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
 }
 
 .nav {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 0;
+  padding: 0.875rem 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .section {
@@ -39,33 +41,33 @@
 
 .sectionLabel {
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: #b0aead;
-  padding: 0 1rem 0.5rem 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #444;
+  text-transform: uppercase;
+  padding: 0 0.75rem 0.4rem 0.75rem;
 }
 
 .navItem {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0.55rem 1rem;
+  padding: 0.55rem 0.75rem;
   font-size: 13.5px;
   font-weight: 500;
-  color: #808184;
-  border-left: 3px solid transparent;
+  color: #888;
+  border-radius: 8px;
   transition: background 0.12s, color 0.12s;
 }
 
 .navItem:hover:not(.active) {
-  background: #fafafa;
-  color: #555;
+  background: rgba(255, 255, 255, 0.05);
+  color: #CCC;
 }
 
 .navItem.active {
-  border-left-color: #F48220;
-  background: #FEF8F2;
-  color: #231F20;
+  background: rgba(244, 130, 32, 0.14);
+  color: #F48220;
 }
 
 .icon {
@@ -78,18 +80,18 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 1rem;
-  border-top: 0.5px solid #e0ddd8;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #F48220;
   color: #FFFFFF;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,7 +101,7 @@
 .userName {
   font-size: 13px;
   font-weight: 500;
-  color: #231F20;
+  color: #CCC;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
