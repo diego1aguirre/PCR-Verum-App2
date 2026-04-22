@@ -68,6 +68,7 @@ export default function VerumMail() {
 
   // Gestionar state
   const [recipients, setRecipients] = useState<Recipient[]>([])
+  const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [recipientStatus, setRecipientStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [meetingLink, setMeetingLink] = useState('')
@@ -178,10 +179,12 @@ export default function VerumMail() {
   // ── Recipients ──────────────────────────────────────────────────────────────
 
   async function handleAddRecipient() {
-    const trimmed = newEmail.trim()
-    if (!trimmed) return
-    if (recipients.some((r) => r.email === trimmed)) {
+    const trimmedEmail = newEmail.trim()
+    const trimmedName = newName.trim()
+    if (!trimmedEmail) return
+    if (recipients.some((r) => r.email === trimmedEmail)) {
       setNewEmail('')
+      setNewName('')
       return
     }
     setRecipientStatus(null)
@@ -189,11 +192,12 @@ export default function VerumMail() {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/mail/recipients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmed }),
+        body: JSON.stringify({ name: trimmedName, email: trimmedEmail }),
       })
       const data: Recipient = await res.json()
       if (!res.ok) throw new Error((data as unknown as { error: string }).error)
       setRecipients((prev) => [...prev, data])
+      setNewName('')
       setNewEmail('')
     } catch (err) {
       setRecipientStatus({
@@ -380,6 +384,14 @@ export default function VerumMail() {
           <div className={m.section}>
             <p className={m.sectionTitle}>Destinatarios</p>
             <div className={m.inlineRow}>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Nombre"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddRecipient())}
+              />
               <input
                 className="form-input"
                 type="email"
