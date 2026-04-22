@@ -8,8 +8,8 @@ html, body, #root {
   height: 100%;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: 14px;
-  color: #F0F0F0;
-  background: #141414;
+  color: #231F20;
+  background: #F5F4F2;
 }
 
 a {
@@ -26,9 +26,9 @@ button {
 
 /* Shared card style */
 .card {
-  background: #222222;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
+  background: #FFFFFF;
+  border: 0.5px solid #e0ddd8;
+  border-radius: 12px;
   padding: 1.5rem;
 }
 
@@ -39,42 +39,36 @@ button {
   border-radius: 8px;
   padding: 0.5rem 1.25rem;
   font-size: 14px;
-  font-weight: 600;
-  transition: background 0.15s;
-  flex-shrink: 0;
+  font-weight: 500;
+  transition: opacity 0.15s;
 }
-.btn-primary:hover { background: #E5731A; }
-.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-primary:hover { opacity: 0.88; }
 
 /* Secondary button */
 .btn-secondary {
-  background: #2A9D8F;
+  background: #08A698;
   color: #FFFFFF;
   border-radius: 8px;
   padding: 0.5rem 1.25rem;
   font-size: 14px;
-  font-weight: 600;
-  transition: background 0.15s;
+  font-weight: 500;
+  transition: opacity 0.15s;
 }
-.btn-secondary:hover { background: #238a7d; }
+.btn-secondary:hover { opacity: 0.88; }
 
 /* Form input */
 .form-input {
-  background: #2A2A2A;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: #FFFFFF;
+  border: 0.5px solid #e0ddd8;
+  border-radius: 12px;
   padding: 0.625rem 0.875rem;
   font-size: 14px;
   font-family: inherit;
-  color: #F0F0F0;
+  color: #231F20;
   width: 100%;
   outline: none;
   transition: border-color 0.15s;
-  color-scheme: dark;
 }
 .form-input:focus {
   border-color: #F48220;
-}
-.form-input::placeholder {
-  color: #555;
 }

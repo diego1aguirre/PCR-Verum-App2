@@ -7,10 +7,10 @@
 }
 
 .label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: #555;
-  letter-spacing: 0.06em;
+  color: #808184;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -30,26 +30,26 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: #F48220;
+  background: #231F20;
   color: #fff;
   border: none;
   border-radius: 8px;
   padding: 0.5rem 0.9rem;
   font-size: 13px;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.12s;
 }
 
 .addBtn:hover {
-  background: #E5731A;
+  background: #3a3535;
 }
 
 .hint {
   font-size: 12px;
-  color: #666;
+  color: #808184;
 }
 
 /* File list */
@@ -60,7 +60,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 0.5px solid #e0ddd8;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -70,8 +70,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 0.5px solid #e0ddd8;
+  background: #fff;
   transition: background 0.1s;
 }
 
@@ -80,12 +80,12 @@
 }
 
 .fileItem:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: #fafaf9;
 }
 
 .fileNum {
   font-size: 12px;
-  color: #555;
+  color: #b0aead;
   min-width: 1.25rem;
   flex-shrink: 0;
 }
@@ -97,24 +97,24 @@
   padding: 0.15rem 0.35rem;
   border-radius: 3px;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.07);
-  color: #888;
+  background: #f0eeec;
+  color: #808184;
 }
 
 .fileBadge[data-ext="PDF"] {
-  background: rgba(244, 130, 32, 0.15);
-  color: #F48220;
+  background: #FEF0E6;
+  color: #d4600a;
 }
 
 .fileBadge[data-ext="DOCX"] {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60A5FA;
+  background: #E8F0FE;
+  color: #1a56c4;
 }
 
 .fileName {
   flex: 1;
   font-size: 13px;
-  color: #E0E0E0;
+  color: #231F20;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -131,7 +131,7 @@
 .moveBtn {
   background: none;
   border: none;
-  color: #555;
+  color: #808184;
   font-size: 13px;
   cursor: pointer;
   padding: 0.2rem 0.35rem;
@@ -142,18 +142,18 @@
 
 .moveBtn:hover:not(:disabled) {
   color: #F48220;
-  background: rgba(244, 130, 32, 0.1);
+  background: #FEF8F2;
 }
 
 .moveBtn:disabled {
-  opacity: 0.2;
+  opacity: 0.25;
   cursor: default;
 }
 
 .removeBtn {
   background: none;
   border: none;
-  color: #555;
+  color: #b0aead;
   font-size: 11px;
   cursor: pointer;
   padding: 0.2rem 0.4rem;
@@ -163,7 +163,8 @@
 }
 
 .removeBtn:hover {
-  color: #F87171;
+  color: #c0392b;
+  text-decoration: underline;
 }
 
 /* Checkboxes */
@@ -173,7 +174,7 @@
   gap: 0.5rem;
   padding: 0.3rem 0;
   font-size: 13.5px;
-  color: #E0E0E0;
+  color: #231F20;
   cursor: pointer;
   user-select: none;
 }
@@ -192,7 +193,7 @@
   align-items: center;
   gap: 0.6rem;
   font-size: 13px;
-  color: #888;
+  color: #808184;
   margin-bottom: 0.75rem;
 }
 
@@ -200,7 +201,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid #e0ddd8;
   border-top-color: #F48220;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -214,12 +215,12 @@
 /* Status */
 .msgOk {
   font-size: 13px;
-  color: #34D399;
+  color: #08A698;
   margin: 0 0 0.75rem;
 }
 
 .msgErr {
   font-size: 13px;
-  color: #F87171;
+  color: #c0392b;
   margin: 0 0 0.75rem;
 }

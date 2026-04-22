@@ -47,7 +47,7 @@ function dateFromFilename(filename: string): string {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type Recipient = { id: string; name: string; email: string }
+type Recipient = { id: string; email: string }
 type View = 'enviar' | 'gestionar'
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -416,10 +416,7 @@ export default function VerumMail() {
             <ul className={m.recipientList}>
               {recipients.map((r) => (
                 <li key={r.id} className={m.recipientItem}>
-                  <div className={m.recipientInfo}>
-                    {r.name && <span className={m.recipientName}>{r.name}</span>}
-                    <span className={m.recipientEmail}>{r.email}</span>
-                  </div>
+                  <span>{r.email}</span>
                   <button
                     type="button"
                     className={m.removeBtn}
