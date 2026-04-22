@@ -232,11 +232,14 @@ app.get('/api/mail/config', async (_req, res) => {
 })
 
 app.put('/api/mail/config', async (req, res) => {
+  console.log('PUT /api/mail/config req.body:', JSON.stringify(req.body, null, 2))
   const { meeting_link } = req.body
   if (!meeting_link) return res.status(400).json({ error: 'meeting_link is required' })
-  const { error } = await getSupabase()
+  const { data, error } = await getSupabase()
     .from('config')
     .upsert({ key: 'meeting_link', value: meeting_link }, { onConflict: 'key' })
+  console.log('Supabase upsert data:', JSON.stringify(data, null, 2))
+  console.log('Supabase upsert error:', JSON.stringify(error, null, 2))
   if (error) return res.status(500).json({ error: error.message })
   res.json({ success: true })
 })
