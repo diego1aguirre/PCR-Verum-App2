@@ -371,6 +371,75 @@ app.post('/api/comunicado/send', upload.single('file'), async (req, res) => {
   }
 })
 
+// ─── Reporte send ────────────────────────────────────────────────────────────
+// Emails the uploaded PDF directly (no Flask processing needed) to all
+// recipients in the recipients_calificacion table.
+
+app.post('/api/reporte/send', upload.single('file'), async (req, res) => {
+  try {
+    const { empresa, mensaje } = req.body
+    const file = req.file
+
+    if (!file) return res.status(400).json({ error: 'file (.pdf) is required.' })
+    if (!empresa?.trim()) return res.status(400).json({ error: 'empresa is required.' })
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(500).json({ error: 'RESEND_API_KEY is not configured on the server.' })
+    }
+
+    const trimmedMensaje = mensaje ? String(mensaje).trim() : ''
+
+    // Fetch calificacion recipients
+    const { data: recipientsData, error: recipientsError } = await getSupabase()
+      .from('recipients_calificacion')
+      .select('email')
+    let toList = []
+    if (!recipientsError && Array.isArray(recipientsData) && recipientsData.length > 0) {
+      toList = recipientsData.map((r) => r.email)
+    }
+    if (toList.length === 0) toList = [EMAIL_TO]
+
+    // Build email
+    const emailSubject = `Reporte de Calificación – ${empresa.trim()}`
+    const mensajeHtml = trimmedMensaje
+      ? `<p>${trimmedMensaje.replace(/\n/g, '<br />')}</p>`
+      : ''
+    const htmlBody =
+      '<p>Estimado equipo de publicación, espero se encuentren bien.</p>' +
+      `<p>Les comparto el reporte de calificación de <strong>${empresa.trim()}</strong>, ` +
+      'pidiéndoles me apoyen con su publicación en nuestra página de Internet.</p>' +
+      mensajeHtml +
+      '<p>Cualquier duda o comentario, estoy a sus órdenes.</p>' +
+      '<p>Muchas gracias por su apoyo.</p>' +
+      '<p>Saludos!</p>'
+
+    const resend = getResend()
+    const { data, error: sendError } = await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: toList,
+      subject: emailSubject,
+      html: htmlBody,
+      attachments: [
+        {
+          filename: file.originalname,
+          content: file.buffer.toString('base64'),
+        },
+      ],
+    })
+
+    console.log('Resend reporte response:', JSON.stringify(data, null, 2))
+    if (sendError) {
+      return res.status(500).json({ error: sendError.message ?? JSON.stringify(sendError) })
+    }
+
+    return res.json({ success: true })
+  } catch (err) {
+    console.error('Error sending reporte:', err)
+    return res.status(500).json({
+      error: err instanceof Error ? err.message : 'Failed to send reporte.',
+    })
+  }
+})
+
 // ─── Config (Teams meeting link) ─────────────────────────────────────────────
 
 app.get('/api/mail/config', async (_req, res) => {
