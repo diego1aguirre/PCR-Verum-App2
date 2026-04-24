@@ -219,6 +219,42 @@ app.delete('/api/mail/recipients/:id', async (req, res) => {
   res.status(204).end()
 })
 
+// ─── Calificación recipients ──────────────────────────────────────────────────
+// NOTE: Create table `recipients_calificacion` in Supabase with the same schema
+// as the `recipients` table: id (uuid, pk), email (text, not null),
+// name (text, not null), created_at (timestamptz, default now()).
+
+app.get('/api/calificacion/recipients', async (_req, res) => {
+  const { data, error } = await getSupabase()
+    .from('recipients_calificacion')
+    .select('*')
+    .order('created_at')
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data)
+})
+
+app.post('/api/calificacion/recipients', async (req, res) => {
+  const { email, name } = req.body
+  if (!email) return res.status(400).json({ error: 'email is required' })
+  const row = { email, ...(name ? { name } : {}) }
+  const { data, error } = await getSupabase()
+    .from('recipients_calificacion')
+    .insert(row)
+    .select()
+    .single()
+  if (error) return res.status(500).json({ error: error.message })
+  res.status(201).json(data)
+})
+
+app.delete('/api/calificacion/recipients/:id', async (req, res) => {
+  const { error } = await getSupabase()
+    .from('recipients_calificacion')
+    .delete()
+    .eq('id', req.params.id)
+  if (error) return res.status(500).json({ error: error.message })
+  res.status(204).end()
+})
+
 // ─── Config (Teams meeting link) ─────────────────────────────────────────────
 
 app.get('/api/mail/config', async (_req, res) => {
