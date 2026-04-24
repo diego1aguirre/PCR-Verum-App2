@@ -255,6 +255,122 @@ app.delete('/api/calificacion/recipients/:id', async (req, res) => {
   res.status(204).end()
 })
 
+// ─── Comunicado send ─────────────────────────────────────────────────────────
+// Calls Flask /flask/comunicado/process twice (DOCX + PDF), then emails results
+// to all recipients in the recipients_calificacion table.
+// Requires FLASK_URL env var (e.g. http://flask.railway.internal:5000 on Railway,
+// http://localhost:5000 for local dev).
+
+app.post('/api/comunicado/send', upload.single('file'), async (req, res) => {
+  try {
+    const { empresa, output_name, mensaje } = req.body
+    const file = req.file
+
+    if (!file) return res.status(400).json({ error: 'file (.docx) is required.' })
+    if (!empresa?.trim()) return res.status(400).json({ error: 'empresa is required.' })
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(500).json({ error: 'RESEND_API_KEY is not configured on the server.' })
+    }
+
+    const FLASK_URL = process.env.FLASK_URL || 'http://localhost:5000'
+    const baseName = output_name?.trim() || 'ComPrensa_'
+    const trimmedMensaje = mensaje ? String(mensaje).trim() : ''
+
+    // Helper — build a FormData to POST to Flask
+    function makeFlaskForm(plain, pdf) {
+      const fd = new FormData()
+      const blob = new Blob([file.buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      })
+      fd.append('file', blob, file.originalname)
+      fd.append('plain', plain ? 'true' : 'false')
+      fd.append('pdf', pdf ? 'true' : 'false')
+      return fd
+    }
+
+    // 1) Versión lisa DOCX (plain=true, pdf=false)
+    const flaskDocxRes = await fetch(`${FLASK_URL}/flask/comunicado/process`, {
+      method: 'POST',
+      body: makeFlaskForm(true, false),
+    })
+    if (!flaskDocxRes.ok) {
+      const d = await flaskDocxRes.json().catch(() => ({}))
+      throw new Error(d.error || `Flask DOCX error ${flaskDocxRes.status}`)
+    }
+    const docxBuffer = Buffer.from(await flaskDocxRes.arrayBuffer())
+
+    // 2) PDF from original (plain=false, pdf=true)
+    const flaskPdfRes = await fetch(`${FLASK_URL}/flask/comunicado/process`, {
+      method: 'POST',
+      body: makeFlaskForm(false, true),
+    })
+    if (!flaskPdfRes.ok) {
+      const d = await flaskPdfRes.json().catch(() => ({}))
+      throw new Error(d.error || `Flask PDF error ${flaskPdfRes.status}`)
+    }
+    const pdfBuffer = Buffer.from(await flaskPdfRes.arrayBuffer())
+
+    // 3) Fetch calificacion recipients
+    const { data: recipientsData, error: recipientsError } = await getSupabase()
+      .from('recipients_calificacion')
+      .select('email')
+    let toList = []
+    if (!recipientsError && Array.isArray(recipientsData) && recipientsData.length > 0) {
+      toList = recipientsData.map((r) => r.email)
+    }
+    if (toList.length === 0) toList = [EMAIL_TO]
+
+    // 4) Build email
+    const emailSubject = `Comunicado de Prensa – ${empresa.trim()} (${baseName})`
+    const mensajeHtml = trimmedMensaje
+      ? `<p>${trimmedMensaje.replace(/\n/g, '<br />')}</p>`
+      : ''
+    const htmlBody =
+      '<p>Estimado equipo de publicación, espero se encuentren bien.</p>' +
+      `<p>Les comparto el comunicado de prensa de la calificación de <strong>${empresa.trim()}</strong> (${baseName}), ` +
+      'pidiéndoles me apoyen con su publicación en nuestra página de Internet.</p>' +
+      mensajeHtml +
+      '<p>Cualquier tema, estamos a sus órdenes.</p>' +
+      '<p>Muchas gracias por su apoyo.</p>' +
+      '<p>Saludos!</p>'
+
+    // 5) Send via Resend — three attachments: original DOCX, lisa DOCX, PDF
+    const resend = getResend()
+    const { data, error: sendError } = await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: toList,
+      subject: emailSubject,
+      html: htmlBody,
+      attachments: [
+        {
+          filename: file.originalname,
+          content: file.buffer.toString('base64'),
+        },
+        {
+          filename: `${baseName}.docx`,
+          content: docxBuffer.toString('base64'),
+        },
+        {
+          filename: `${baseName}.pdf`,
+          content: pdfBuffer.toString('base64'),
+        },
+      ],
+    })
+
+    console.log('Resend comunicado response:', JSON.stringify(data, null, 2))
+    if (sendError) {
+      return res.status(500).json({ error: sendError.message ?? JSON.stringify(sendError) })
+    }
+
+    return res.json({ success: true })
+  } catch (err) {
+    console.error('Error sending comunicado:', err)
+    return res.status(500).json({
+      error: err instanceof Error ? err.message : 'Failed to send comunicado.',
+    })
+  }
+})
+
 // ─── Config (Teams meeting link) ─────────────────────────────────────────────
 
 app.get('/api/mail/config', async (_req, res) => {
