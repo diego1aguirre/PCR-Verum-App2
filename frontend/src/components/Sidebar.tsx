@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 import styles from './Sidebar.module.css'
-
-const user = { name: 'Diego Aguirre', initials: 'DA' }
 
 const tools = [
   {
@@ -77,6 +77,16 @@ const settings = [
 ]
 
 export default function Sidebar() {
+  const user = useAuth()
+
+  // Derive initials from email (e.g. "da" from "diego@verum.mx")
+  const emailLocal = user?.email?.split('@')[0] ?? ''
+  const initials = emailLocal.slice(0, 2).toUpperCase()
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+  }
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logoWrap}>
@@ -122,8 +132,17 @@ export default function Sidebar() {
       </nav>
 
       <div className={styles.userRow}>
-        <div className={styles.avatar}>{user.initials}</div>
-        <span className={styles.userName}>{user.name}</span>
+        <div className={styles.avatar}>{initials}</div>
+        <div className={styles.userInfo}>
+          <span className={styles.userEmail}>{user?.email}</span>
+          <button
+            type="button"
+            className={styles.signOutBtn}
+            onClick={handleSignOut}
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </div>
     </aside>
   )
