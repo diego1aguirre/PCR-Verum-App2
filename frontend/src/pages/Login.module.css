@@ -1,39 +1,46 @@
-/* Full-page centered layout */
+/* Full-page centered layout — dark background */
 .page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F5F4F2;
+  background: #231F20;
   padding: 1.5rem;
 }
 
 /* Login card */
 .card {
   width: 100%;
-  max-width: 380px;
+  max-width: 390px;
   background: #FFFFFF;
-  border: 0.5px solid #e0ddd8;
   border-radius: 16px;
-  padding: 2.5rem 2rem;
+  padding: 2.5rem 2rem 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
 }
 
-/* Logo / brand */
+/* Logo */
 .logoWrap {
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .logo {
-  max-width: 150px;
+  max-width: 148px;
   height: auto;
   display: block;
+}
+
+/* Mode title */
+.title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #231F20;
+  margin: 0 0 1.5rem;
+  text-align: center;
 }
 
 /* Form */
@@ -71,6 +78,18 @@
   text-align: center;
 }
 
+/* Success message (sign-up confirmation) */
+.success {
+  font-size: 13px;
+  color: #08A698;
+  background: #f0fafa;
+  border: 0.5px solid #b2e4e1;
+  border-radius: 8px;
+  padding: 0.6rem 0.875rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
 /* Submit button */
 .submitBtn {
   width: 100%;
@@ -84,7 +103,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .submitBtn:hover:not(:disabled) {
@@ -96,10 +115,27 @@
   cursor: default;
 }
 
-/* Hint below form */
-.hint {
+/* Mode toggle */
+.toggle {
   margin-top: 1.25rem;
-  font-size: 12px;
-  color: #b0aead;
+  font-size: 13px;
+  color: #808184;
   text-align: center;
+}
+
+.toggleLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-family: inherit;
+  color: #F48220;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.toggleLink:hover {
+  opacity: 0.8;
 }
