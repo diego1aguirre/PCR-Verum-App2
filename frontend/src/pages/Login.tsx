@@ -27,9 +27,13 @@ export default function Login() {
     setError(null)
     setSuccessMsg(null)
 
-    // Domain restriction — enforced on both modes
+    // Domain restriction — enforced on both modes (error is intentionally generic)
     if (!email.trim().toLowerCase().endsWith('@verum.mx')) {
-      setError('Solo se permiten correos @verum.mx')
+      setError(
+        mode === 'signin'
+          ? 'Correo o contraseña incorrectos.'
+          : 'No se pudo crear la cuenta. Inténtalo de nuevo.',
+      )
       return
     }
 
@@ -111,7 +115,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="usuario@verum.mx"
+              placeholder="Correo electrónico"
               autoComplete="email"
               autoFocus
               required
