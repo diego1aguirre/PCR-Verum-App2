@@ -181,8 +181,8 @@ export default function MergePDF() {
               </svg>
               <span>
                 {queue.length === 0
-                  ? <>Elige uno o más archivos o <u>arrástralos aquí</u></>
-                  : <>Agregar más archivos o <u>arrástralos aquí</u></>}
+                  ? <><u>Elige uno o más archivos</u> o arrástralos aquí</>
+                  : <><u>Agregar más archivos</u> o arrástralos aquí</>}
               </span>
               <span className={m.dropHint}>.pdf, .docx</span>
             </div>

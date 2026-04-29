@@ -250,7 +250,7 @@ export default function VerumMail() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Verum Mail</h1>
+      <h1 className={styles.title}>Convocar Comité</h1>
 
       {/* Tabs */}
       <div className={m.tabs}>
