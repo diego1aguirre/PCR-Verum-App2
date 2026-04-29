@@ -166,7 +166,7 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
 
     const resend = getResend()
     const { data, error: sendError } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'PCR Verum <contacto@verum.mx>',
       to: toList,
       subject: fullTitle,
       html: htmlForEmail,
@@ -337,7 +337,7 @@ app.post('/api/comunicado/send', upload.single('file'), async (req, res) => {
     // 5) Send via Resend — three attachments: original DOCX, lisa DOCX, PDF
     const resend = getResend()
     const { data, error: sendError } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'PCR Verum <contacto@verum.mx>',
       to: toList,
       subject: emailSubject,
       html: htmlBody,
@@ -414,7 +414,7 @@ app.post('/api/reporte/send', upload.single('file'), async (req, res) => {
 
     const resend = getResend()
     const { data, error: sendError } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'PCR Verum <contacto@verum.mx>',
       to: toList,
       subject: emailSubject,
       html: htmlBody,
