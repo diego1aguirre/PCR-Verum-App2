@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import styles from './Page.module.css'
 import m from './Reporte.module.css'
+import { useAuth } from '../lib/AuthContext'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ function empresaFromFilename(filename: string): string {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Reporte() {
+  const user = useAuth()
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
   const [empresa, setEmpresa] = useState('')
@@ -82,6 +84,7 @@ export default function Reporte() {
       formData.append('file', file)
       formData.append('empresa', empresa.trim())
       formData.append('mensaje', mensaje.trim())
+      formData.append('sender_email', user?.email || '')
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reporte/send`, {
         method: 'POST',

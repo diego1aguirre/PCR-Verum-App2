@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import styles from './Page.module.css'
 import m from './Comunicado.module.css'
+import { useAuth } from '../lib/AuthContext'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ type View = 'enviar' | 'gestionar'
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Comunicado() {
+  const user = useAuth()
   const [view, setView] = useState<View>('enviar')
 
   // ── Enviar state ────────────────────────────────────────────────────────────
@@ -106,6 +108,7 @@ export default function Comunicado() {
       formData.append('empresa', empresa.trim())
       formData.append('output_name', outputName.trim() || 'ComPrensa_')
       formData.append('mensaje', mensaje.trim())
+      formData.append('sender_email', user?.email || '')
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comunicado/send`, {
         method: 'POST',

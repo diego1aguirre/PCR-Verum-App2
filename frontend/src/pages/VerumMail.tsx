@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import styles from './Page.module.css'
 import m from './VerumMail.module.css'
+import { useAuth } from '../lib/AuthContext'
 
 // ─── Filename parsing (copied verbatim from Verum-Mail/src/App.tsx) ──────────
 
@@ -53,6 +54,7 @@ type View = 'enviar' | 'gestionar'
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function VerumMail() {
+  const user = useAuth()
   const [view, setView] = useState<View>('enviar')
 
   // Enviar state
@@ -149,6 +151,7 @@ export default function VerumMail() {
       formData.append('message', message.trim())
       formData.append('pdf', pdfFile)
       formData.append('recipients', JSON.stringify(recipients.map((r) => r.email)))
+      formData.append('sender_email', user?.email || '')
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/mail/send`, { method: 'POST', body: formData })
       const data = await res.json().catch(() => ({}))

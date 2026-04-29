@@ -38,6 +38,12 @@ app.use(express.json())
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+function getDisplayName(email) {
+  if (!email) return ''
+  const local = email.split('@')[0]
+  return local.split('.').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
 function formatLocalDateForICS(date) {
   const pad = (n) => String(n).padStart(2, '0')
   return (
@@ -64,7 +70,7 @@ app.get('/api/health', (_req, res) => {
 
 app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
   try {
-    const { subject, date, time, message: customMessage, recipients } = req.body
+    const { subject, date, time, message: customMessage, recipients, sender_email } = req.body
     const file = req.file
 
     if (!subject || !date || !time || !file) {
@@ -128,7 +134,7 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     const teamsHtml =
       `<p style="font-size:15pt;font-weight:bold;">Reunión de Microsoft Teams<br />` +
       `<a href="${meetingLink}">Unirse a la reunión</a></p>` +
-      '<p>Saludos,</p>'
+      `<p>Saludos,<br/><strong>${getDisplayName(sender_email)}</strong></p>`
     const htmlForEmail = `${baseHtml}${customHtml}${teamsHtml}`
 
     // Recipients
@@ -168,6 +174,7 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     const { data, error: sendError } = await resend.emails.send({
       from: 'PCR Verum <contacto@verum.mx>',
       to: toList,
+      replyTo: sender_email || undefined,
       subject: fullTitle,
       html: htmlForEmail,
       attachments: [
@@ -263,7 +270,7 @@ app.delete('/api/calificacion/recipients/:id', async (req, res) => {
 
 app.post('/api/comunicado/send', upload.single('file'), async (req, res) => {
   try {
-    const { empresa, output_name, mensaje } = req.body
+    const { empresa, output_name, mensaje, sender_email } = req.body
     const file = req.file
 
     if (!file) return res.status(400).json({ error: 'file (.docx) is required.' })
@@ -332,13 +339,14 @@ app.post('/api/comunicado/send', upload.single('file'), async (req, res) => {
       mensajeHtml +
       '<p>Cualquier tema, estamos a sus órdenes.</p>' +
       '<p>Muchas gracias por su apoyo.</p>' +
-      '<p>Saludos!</p>'
+      `<p>Saludos!<br/><strong>${getDisplayName(sender_email)}</strong></p>`
 
     // 5) Send via Resend — three attachments: original DOCX, lisa DOCX, PDF
     const resend = getResend()
     const { data, error: sendError } = await resend.emails.send({
       from: 'PCR Verum <contacto@verum.mx>',
       to: toList,
+      replyTo: sender_email || undefined,
       subject: emailSubject,
       html: htmlBody,
       attachments: [
@@ -377,7 +385,7 @@ app.post('/api/comunicado/send', upload.single('file'), async (req, res) => {
 
 app.post('/api/reporte/send', upload.single('file'), async (req, res) => {
   try {
-    const { empresa, mensaje } = req.body
+    const { empresa, mensaje, sender_email } = req.body
     const file = req.file
 
     if (!file) return res.status(400).json({ error: 'file (.pdf) is required.' })
@@ -410,12 +418,13 @@ app.post('/api/reporte/send', upload.single('file'), async (req, res) => {
       mensajeHtml +
       '<p>Cualquier duda o comentario, estoy a sus órdenes.</p>' +
       '<p>Muchas gracias por su apoyo.</p>' +
-      '<p>Saludos!</p>'
+      `<p>Saludos!<br/><strong>${getDisplayName(sender_email)}</strong></p>`
 
     const resend = getResend()
     const { data, error: sendError } = await resend.emails.send({
       from: 'PCR Verum <contacto@verum.mx>',
       to: toList,
+      replyTo: sender_email || undefined,
       subject: emailSubject,
       html: htmlBody,
       attachments: [
