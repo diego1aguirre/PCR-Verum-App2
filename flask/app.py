@@ -66,16 +66,45 @@ def _find_soffice() -> str:
     )
 
 
+_PDF_FILTER = (
+    'pdf:writer_pdf_Export:'
+    'EmbedStandardFonts=true,'
+    'EmbedFonts=true,'
+    'ExportBookmarksToPDFDestination=true,'
+    'ExportLinksRelativeFsys=false,'
+    'IsSkipEmptyPages=false,'
+    'SelectPdfVersion=0,'
+    'UseTaggedPDF=true,'
+    'ExportFormFields=false,'
+    'HideViewerToolbar=false,'
+    'HideViewerMenubar=false,'
+    'AllowDuplicateFieldNames=false'
+)
+
+
 def _convert_docx_to_pdf_soffice(docx_path: str, out_dir: str) -> str:
     """Convert a .docx to PDF via LibreOffice headless. Returns the PDF path."""
     soffice = _find_soffice()
-    subprocess.run(
-        [soffice, '--headless', '--convert-to', 'pdf', '--outdir', out_dir, docx_path],
+    result = subprocess.run(
+        [
+            soffice,
+            '--headless',
+            '--infilter=writer8',
+            '--convert-to', _PDF_FILTER,
+            '--outdir', out_dir,
+            docx_path,
+        ],
         check=True,
         capture_output=True,
     )
     pdf_name = os.path.splitext(os.path.basename(docx_path))[0] + '.pdf'
-    return os.path.join(out_dir, pdf_name)
+    pdf_path = os.path.join(out_dir, pdf_name)
+    if not os.path.isfile(pdf_path) or os.path.getsize(pdf_path) == 0:
+        stderr = result.stderr.decode('utf-8', errors='replace')
+        raise RuntimeError(
+            f'LibreOffice produced no output for {docx_path!r}. stderr: {stderr}'
+        )
+    return pdf_path
 
 
 # ─── Health ──────────────────────────────────────────────────────────────────
