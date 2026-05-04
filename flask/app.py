@@ -85,10 +85,23 @@ _PDF_FILTER = (
 def _convert_docx_to_pdf_soffice(docx_path: str, out_dir: str) -> str:
     """Convert a .docx to PDF via LibreOffice headless. Returns the PDF path."""
     soffice = _find_soffice()
+
+    # Ensure absolute paths — LibreOffice can fail to locate files with relative paths
+    docx_path = os.path.abspath(docx_path)
+    out_dir = os.path.abspath(out_dir)
+
+    # LibreOffice needs a writable HOME and must not inherit a PYTHONPATH that
+    # could conflict with its own bundled Python.
+    env = os.environ.copy()
+    env['HOME'] = '/tmp'
+    env['PYTHONPATH'] = ''
+
     result = subprocess.run(
         [
             soffice,
             '--headless',
+            '--norestore',
+            '--nofirststartwizard',
             '--infilter=writer8',
             '--convert-to', _PDF_FILTER,
             '--outdir', out_dir,
@@ -96,6 +109,8 @@ def _convert_docx_to_pdf_soffice(docx_path: str, out_dir: str) -> str:
         ],
         check=True,
         capture_output=True,
+        env=env,
+        timeout=60,
     )
     pdf_name = os.path.splitext(os.path.basename(docx_path))[0] + '.pdf'
     pdf_path = os.path.join(out_dir, pdf_name)
