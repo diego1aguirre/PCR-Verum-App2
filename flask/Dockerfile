@@ -16,13 +16,6 @@ RUN apt-get update && apt-get install -y fontconfig wget cabextract && \
     fc-cache -fv && \
     rm -rf /var/lib/apt/lists/* arial32.exe times32.exe verdan32.exe winetricks
 
-# Install Aptos font (Microsoft 365 default) from the official repo
-RUN mkdir -p /usr/share/fonts/truetype/aptos && \
-    wget -q https://github.com/microsoft/aptos-font/raw/main/fonts/Aptos.ttf -O /usr/share/fonts/truetype/aptos/Aptos.ttf && \
-    wget -q https://github.com/microsoft/aptos-font/raw/main/fonts/Aptos-Bold.ttf -O /usr/share/fonts/truetype/aptos/Aptos-Bold.ttf && \
-    wget -q https://github.com/microsoft/aptos-font/raw/main/fonts/Aptos-Italic.ttf -O /usr/share/fonts/truetype/aptos/Aptos-Italic.ttf && \
-    wget -q https://github.com/microsoft/aptos-font/raw/main/fonts/Aptos-BoldItalic.ttf -O /usr/share/fonts/truetype/aptos/Aptos-BoldItalic.ttf && \
-    fc-cache -fv
 
 WORKDIR /app
 COPY requirements.txt .
