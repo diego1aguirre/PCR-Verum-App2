@@ -7,21 +7,17 @@ GET  /flask/health                  — liveness probe
 POST /flask/comunicado/process      — reformat .docx press-release
 POST /flask/merge/merge             — merge PDF/DOCX files with optional page numbers
 
-System dependency: LibreOffice must be installed for any DOCX→PDF conversion.
-  macOS:  brew install --cask libreoffice
-  Linux:  apt-get install libreoffice  (or equivalent)
-  Set SOFFICE_PATH env var to override the binary location.
+DOCX→PDF conversion is handled by Gotenberg (external service).
+Set the GOTENBERG_URL environment variable to point to your Gotenberg instance.
 """
 
 import io
-import logging
 import os
-import shutil
-import subprocess
 import tempfile
 import uuid
 from pathlib import Path
 
+import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
@@ -43,104 +39,35 @@ _OUTPUT_DIR = '/tmp/comunicado_outputs'
 os.makedirs(_UPLOAD_DIR, exist_ok=True)
 os.makedirs(_OUTPUT_DIR, exist_ok=True)
 
-# ─── LibreOffice helper (used by comunicado PDF conversion) ──────────────────
-
-_SOFFICE_CANDIDATES = [
-    'soffice',
-    'libreoffice',
-    '/usr/bin/soffice',
-    '/usr/lib/libreoffice/program/soffice',
-    '/Applications/LibreOffice.app/Contents/MacOS/soffice',
-]
+# ─── Gotenberg helper (DOCX→PDF conversion) ──────────────────────────────────
+# Set GOTENBERG_URL env var to your Gotenberg service URL.
+# Default points to the shared Railway deployment.
 
 
-def _find_soffice() -> str:
-    override = os.environ.get('SOFFICE_PATH')
-    if override:
-        return override
-    for candidate in _SOFFICE_CANDIDATES:
-        path = shutil.which(candidate) or (candidate if os.path.isfile(candidate) else None)
-        if path:
-            return path
-    raise FileNotFoundError(
-        'LibreOffice not found. Install it or set the SOFFICE_PATH environment variable.'
+def _convert_docx_to_pdf_gotenberg(docx_path: str) -> bytes:
+    """Convert DOCX to PDF using Gotenberg API. Returns PDF bytes."""
+    gotenberg_url = os.environ.get(
+        'GOTENBERG_URL',
+        'https://gotenberg-production-2ffa.up.railway.app',
     )
+    endpoint = f'{gotenberg_url}/forms/libreoffice/convert'
 
+    with open(docx_path, 'rb') as f:
+        files = {
+            'files': (
+                os.path.basename(docx_path),
+                f,
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            )
+        }
+        response = requests.post(endpoint, files=files, timeout=120)
 
-_PDF_FILTER = (
-    'pdf:writer_pdf_Export:'
-    'EmbedStandardFonts=true,'
-    'EmbedFonts=true,'
-    'ExportBookmarksToPDFDestination=true,'
-    'ExportLinksRelativeFsys=false,'
-    'IsSkipEmptyPages=false,'
-    'SelectPdfVersion=0,'
-    'UseTaggedPDF=true,'
-    'ExportFormFields=false,'
-    'HideViewerToolbar=false,'
-    'HideViewerMenubar=false,'
-    'AllowDuplicateFieldNames=false'
-)
-
-
-def _convert_docx_to_pdf_soffice(docx_path: str, out_dir: str) -> str:
-    """Convert a .docx to PDF via LibreOffice headless. Returns the PDF path."""
-    soffice = _find_soffice()
-
-    # Ensure absolute paths — LibreOffice can fail to locate files with relative paths
-    docx_path = os.path.abspath(docx_path)
-    out_dir = os.path.abspath(out_dir)
-
-    # LibreOffice needs a writable HOME and must not inherit a PYTHONPATH that
-    # could conflict with its own bundled Python.
-    env = os.environ.copy()
-    env['HOME'] = '/tmp'
-    env['PYTHONPATH'] = ''
-
-    # Diagnostic logging — visible in Railway logs
-    logging.warning(f"[soffice] Input file exists: {os.path.exists(docx_path)}")
-    logging.warning(f"[soffice] Input file size: {os.path.getsize(docx_path) if os.path.exists(docx_path) else 'N/A'}")
-    logging.warning(f"[soffice] Input file path: {docx_path}")
-    logging.warning(f"[soffice] Output dir: {out_dir}")
-    logging.warning(f"[soffice] HOME env: {env.get('HOME')}")
-    logging.warning(f"[soffice] soffice binary: {soffice}")
-
-    # Ensure the file is world-readable (gunicorn may write with restrictive umask)
-    os.chmod(docx_path, 0o644)
-
-    result = subprocess.run(
-        [
-            soffice,
-            '--headless',
-            '--norestore',
-            '--nofirststartwizard',
-            '--convert-to', 'pdf',
-            '--outdir', out_dir,
-            docx_path,
-        ],
-        capture_output=True,
-        env=env,
-        timeout=60,
-    )
-
-    stdout = result.stdout.decode('utf-8', errors='replace')
-    stderr = result.stderr.decode('utf-8', errors='replace')
-    logging.warning(f"[soffice] returncode: {result.returncode}")
-    logging.warning(f"[soffice] stdout: {stdout}")
-    logging.warning(f"[soffice] stderr: {stderr}")
-
-    if result.returncode != 0:
+    if response.status_code != 200:
         raise RuntimeError(
-            f'LibreOffice exited with code {result.returncode}. stderr: {stderr}'
+            f'Gotenberg conversion failed: {response.status_code} {response.text}'
         )
 
-    pdf_name = os.path.splitext(os.path.basename(docx_path))[0] + '.pdf'
-    pdf_path = os.path.join(out_dir, pdf_name)
-    if not os.path.isfile(pdf_path) or os.path.getsize(pdf_path) == 0:
-        raise RuntimeError(
-            f'LibreOffice produced no output for {docx_path!r}. stdout: {stdout} stderr: {stderr}'
-        )
-    return pdf_path
+    return response.content
 
 
 # ─── Health ──────────────────────────────────────────────────────────────────
@@ -158,7 +85,7 @@ def comunicado_process():
     Accepts multipart form-data:
       file  — .docx file (required)
       plain — "true" | "false"  generate reformatted plain .docx
-      pdf   — "true" | "false"  generate PDF via LibreOffice
+      pdf   — "true" | "false"  generate PDF via Gotenberg
 
     Returns the first generated file as a download (plain takes priority over pdf).
     """
@@ -203,11 +130,12 @@ def comunicado_process():
     if want_pdf:
         pdf_filename = upload_stem + '.pdf'
         try:
-            raw_pdf = _convert_docx_to_pdf_soffice(original_path, work_dir)
+            pdf_bytes = _convert_docx_to_pdf_gotenberg(original_path)
         except Exception as e:
             return jsonify({'error': f'PDF conversion failed: {e}'}), 500
         pdf_path = os.path.join(work_dir, pdf_filename)
-        os.rename(raw_pdf, pdf_path)
+        with open(pdf_path, 'wb') as f:
+            f.write(pdf_bytes)
 
     # ── Return ────────────────────────────────────────────────────────────
     if want_plain:
@@ -237,7 +165,7 @@ def merge_merge():
       output_name — desired filename for the download (default: merged_output.pdf)
 
     Returns the merged PDF as a download.
-    DOCX files are converted to PDF via LibreOffice (preferred) or docx2pdf.
+    DOCX files are converted to PDF via Gotenberg (through pdf_pipeline).
     """
     files = request.files.getlist('files') or request.files.getlist('files[]')
     if not files:
