@@ -14,6 +14,7 @@ System dependency: LibreOffice must be installed for any DOCX→PDF conversion.
 """
 
 import io
+import logging
 import os
 import shutil
 import subprocess
@@ -96,28 +97,48 @@ def _convert_docx_to_pdf_soffice(docx_path: str, out_dir: str) -> str:
     env['HOME'] = '/tmp'
     env['PYTHONPATH'] = ''
 
+    # Diagnostic logging — visible in Railway logs
+    logging.warning(f"[soffice] Input file exists: {os.path.exists(docx_path)}")
+    logging.warning(f"[soffice] Input file size: {os.path.getsize(docx_path) if os.path.exists(docx_path) else 'N/A'}")
+    logging.warning(f"[soffice] Input file path: {docx_path}")
+    logging.warning(f"[soffice] Output dir: {out_dir}")
+    logging.warning(f"[soffice] HOME env: {env.get('HOME')}")
+    logging.warning(f"[soffice] soffice binary: {soffice}")
+
+    # Ensure the file is world-readable (gunicorn may write with restrictive umask)
+    os.chmod(docx_path, 0o644)
+
     result = subprocess.run(
         [
             soffice,
             '--headless',
             '--norestore',
             '--nofirststartwizard',
-            '--infilter=writer8',
-            '--convert-to', _PDF_FILTER,
+            '--convert-to', 'pdf',
             '--outdir', out_dir,
             docx_path,
         ],
-        check=True,
         capture_output=True,
         env=env,
         timeout=60,
     )
+
+    stdout = result.stdout.decode('utf-8', errors='replace')
+    stderr = result.stderr.decode('utf-8', errors='replace')
+    logging.warning(f"[soffice] returncode: {result.returncode}")
+    logging.warning(f"[soffice] stdout: {stdout}")
+    logging.warning(f"[soffice] stderr: {stderr}")
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f'LibreOffice exited with code {result.returncode}. stderr: {stderr}'
+        )
+
     pdf_name = os.path.splitext(os.path.basename(docx_path))[0] + '.pdf'
     pdf_path = os.path.join(out_dir, pdf_name)
     if not os.path.isfile(pdf_path) or os.path.getsize(pdf_path) == 0:
-        stderr = result.stderr.decode('utf-8', errors='replace')
         raise RuntimeError(
-            f'LibreOffice produced no output for {docx_path!r}. stderr: {stderr}'
+            f'LibreOffice produced no output for {docx_path!r}. stdout: {stdout} stderr: {stderr}'
         )
     return pdf_path
 
