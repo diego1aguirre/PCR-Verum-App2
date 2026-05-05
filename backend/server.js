@@ -78,6 +78,7 @@ app.get('/api/health', (_req, res) => {
 // ─── Mail ────────────────────────────────────────────────────────────────────
 
 app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
+  console.log('POST /api/mail/send called, EMAIL_USER:', process.env.EMAIL_USER ? 'set' : 'missing')
   try {
     const { subject, date, time, message: customMessage, recipients, sender_email } = req.body
     const file = req.file
@@ -180,25 +181,33 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     ].join('\r\n')
 
     const transporter = getTransporter()
-    await transporter.sendMail({
-      from: `PCR Verum <${process.env.EMAIL_USER}>`,
-      to: toList,
-      replyTo: sender_email || undefined,
-      subject: fullTitle,
-      html: htmlForEmail,
-      attachments: [
-        {
-          filename: file.originalname,
-          content: file.buffer,
-        },
-        {
-          filename: 'invitacion.ics',
-          content: Buffer.from(icsContent),
-          contentType: 'text/calendar;method=REQUEST',
-          contentDisposition: 'inline',
-        },
-      ],
-    })
+    try {
+      const info = await transporter.sendMail({
+        from: `PCR Verum <${process.env.EMAIL_USER}>`,
+        to: toList,
+        replyTo: sender_email || undefined,
+        subject: fullTitle,
+        html: htmlForEmail,
+        attachments: [
+          {
+            filename: file.originalname,
+            content: file.buffer,
+          },
+          {
+            filename: 'invitacion.ics',
+            content: Buffer.from(icsContent),
+            contentType: 'text/calendar;method=REQUEST',
+            contentDisposition: 'inline',
+          },
+        ],
+      })
+      console.log('Email sent successfully:', info.messageId)
+    } catch (err) {
+      console.error('Nodemailer error:', err.message)
+      console.error('Nodemailer error code:', err.code)
+      console.error('Nodemailer error response:', err.response)
+      throw err
+    }
 
     return res.json({ success: true })
   } catch (err) {
