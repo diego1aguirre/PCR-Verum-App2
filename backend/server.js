@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
 import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 import { createClient } from '@supabase/supabase-js'
 
 const app = express()
@@ -11,6 +12,14 @@ const EMAIL_TO = 'diego1992aguirre@gmail.com'
 const TIMEZONE = 'America/Mexico_City'
 
 const getResend = () => new Resend(process.env.RESEND_API_KEY)
+
+const getTransporter = () => nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+})
 
 let _supabase = null
 function getSupabase() {
@@ -76,8 +85,8 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     if (!subject || !date || !time || !file) {
       return res.status(400).json({ error: 'subject, date, time and pdf file are required.' })
     }
-    if (!process.env.RESEND_API_KEY) {
-      return res.status(500).json({ error: 'RESEND_API_KEY is not configured on the server.' })
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({ error: 'EMAIL_USER and EMAIL_PASS are not configured on the server.' })
     }
 
     // Date/time formatting
@@ -170,9 +179,9 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       '',
     ].join('\r\n')
 
-    const resend = getResend()
-    const { data, error: sendError } = await resend.emails.send({
-      from: 'PCR Verum <contacto@verum.mx>',
+    const transporter = getTransporter()
+    await transporter.sendMail({
+      from: `PCR Verum <${process.env.EMAIL_USER}>`,
       to: toList,
       replyTo: sender_email || undefined,
       subject: fullTitle,
@@ -180,21 +189,16 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       attachments: [
         {
           filename: file.originalname,
-          content: file.buffer.toString('base64'),
+          content: file.buffer,
         },
         {
-          filename: 'invite.ics',
-          content: Buffer.from(icsContent).toString('base64'),
+          filename: 'invitacion.ics',
+          content: Buffer.from(icsContent),
+          contentType: 'text/calendar;method=REQUEST',
+          contentDisposition: 'inline',
         },
       ],
     })
-
-    console.log('Resend response:', JSON.stringify(data, null, 2))
-    console.log('Resend error:', JSON.stringify(sendError, null, 2))
-
-    if (sendError) {
-      return res.status(500).json({ error: sendError.message ?? JSON.stringify(sendError) })
-    }
 
     return res.json({ success: true })
   } catch (err) {
