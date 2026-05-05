@@ -4,6 +4,7 @@ import cors from 'cors'
 import multer from 'multer'
 import { Resend } from 'resend'
 import nodemailer from 'nodemailer'
+import { google } from 'googleapis'
 import { createClient } from '@supabase/supabase-js'
 
 const app = express()
@@ -13,16 +14,17 @@ const TIMEZONE = 'America/Mexico_City'
 
 const getResend = () => new Resend(process.env.RESEND_API_KEY)
 
-const getTransporter = () => nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  family: 4,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-})
+const getGmailClient = () => {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    'https://developers.google.com/oauthplayground'
+  )
+  oauth2Client.setCredentials({
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+  })
+  return google.gmail({ version: 'v1', auth: oauth2Client })
+}
 
 let _supabase = null
 function getSupabase() {
@@ -81,7 +83,7 @@ app.get('/api/health', (_req, res) => {
 // ─── Mail ────────────────────────────────────────────────────────────────────
 
 app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
-  console.log('POST /api/mail/send called, EMAIL_USER:', process.env.EMAIL_USER ? 'set' : 'missing')
+  console.log('POST /api/mail/send called, GMAIL_CLIENT_ID:', process.env.GMAIL_CLIENT_ID ? 'set' : 'missing')
   try {
     const { subject, date, time, message: customMessage, recipients, sender_email } = req.body
     const file = req.file
@@ -89,8 +91,8 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     if (!subject || !date || !time || !file) {
       return res.status(400).json({ error: 'subject, date, time and pdf file are required.' })
     }
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      return res.status(500).json({ error: 'EMAIL_USER and EMAIL_PASS are not configured on the server.' })
+    if (!process.env.GMAIL_CLIENT_ID || !process.env.GMAIL_CLIENT_SECRET || !process.env.GMAIL_REFRESH_TOKEN) {
+      return res.status(500).json({ error: 'GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN are not configured on the server.' })
     }
 
     // Date/time formatting
@@ -183,32 +185,47 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       '',
     ].join('\r\n')
 
-    const transporter = getTransporter()
+    const gmail = getGmailClient()
+    const gmailUser = process.env.GMAIL_USER || 'diego.aguirre@verum.mx'
+
+    // Use nodemailer stream transport for MIME building only — not for sending
+    const mimeTransport = nodemailer.createTransport({ streamTransport: true, newline: 'unix', buffer: true })
+    const message = await mimeTransport.sendMail({
+      from: `PCR Verum <${gmailUser}>`,
+      to: toList.join(', '),
+      replyTo: sender_email || undefined,
+      subject: fullTitle,
+      html: htmlForEmail,
+      attachments: [
+        {
+          filename: file.originalname,
+          content: file.buffer,
+        },
+        {
+          filename: 'invitacion.ics',
+          content: Buffer.from(icsContent),
+          contentType: 'text/calendar;method=REQUEST',
+          contentDisposition: 'inline',
+        },
+      ],
+    })
+
+    const rawEmail = message.message
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+
     try {
-      const info = await transporter.sendMail({
-        from: `PCR Verum <${process.env.EMAIL_USER}>`,
-        to: toList,
-        replyTo: sender_email || undefined,
-        subject: fullTitle,
-        html: htmlForEmail,
-        attachments: [
-          {
-            filename: file.originalname,
-            content: file.buffer,
-          },
-          {
-            filename: 'invitacion.ics',
-            content: Buffer.from(icsContent),
-            contentType: 'text/calendar;method=REQUEST',
-            contentDisposition: 'inline',
-          },
-        ],
+      const sent = await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: { raw: rawEmail },
       })
-      console.log('Email sent successfully:', info.messageId)
+      console.log('Email sent successfully via Gmail API, id:', sent.data.id)
     } catch (err) {
-      console.error('Nodemailer error:', err.message)
-      console.error('Nodemailer error code:', err.code)
-      console.error('Nodemailer error response:', err.response)
+      console.error('Gmail API error:', err.message)
+      console.error('Gmail API error code:', err.code)
+      console.error('Gmail API error response:', err.response?.data)
       throw err
     }
 
