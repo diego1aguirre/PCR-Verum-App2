@@ -220,6 +220,11 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       .replace(/\//g, '_')
       .replace(/=+$/, '')
 
+    console.log('=== iCal Content ===')
+    console.log(icsContent)
+    console.log('=== End iCal ===')
+    console.log('Raw email length:', rawEmail.length)
+
     try {
       const sent = await gmail.users.messages.send({
         userId: 'me',
