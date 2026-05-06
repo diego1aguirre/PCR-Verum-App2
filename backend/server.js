@@ -113,9 +113,15 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     if (hour12 === 0) hour12 = 12
     const formattedTime = `${hour12}:${minuteStr} ${isPM ? 'p.m.' : 'a.m.'}`
 
-    // iCal timestamps
-    const dtStartLocal = formatLocalDateForICS(startLocal)
-    const dtEndLocal = formatLocalDateForICS(endLocal)
+    // iCal timestamps — built directly from user input strings to avoid
+    // any server-timezone offset being applied to DTSTART/DTEND.
+    // TZID=America/Mexico_City means the value must be the exact local
+    // clock time the user entered, with no UTC conversion whatsoever.
+    const [dateYear, dateMon, dateDay] = date.split('-')
+    const [timeHour, timeMin] = time.split(':')
+    const dtStartLocal = `${dateYear}${dateMon}${dateDay}T${timeHour.padStart(2, '0')}${timeMin.padStart(2, '0')}00`
+    const endHour = String((parseInt(timeHour, 10) + 1) % 24).padStart(2, '0')
+    const dtEndLocal = `${dateYear}${dateMon}${dateDay}T${endHour}${timeMin.padStart(2, '0')}00`
     const dtStamp = formatUtcDateForICS(new Date())
     const uid = `${Date.now()}@verum-mail`
 
