@@ -164,7 +164,10 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     }
     if (toList.length === 0) toList = [EMAIL_TO]
 
-    // iCal content (exact format from old project)
+    const gmail = getGmailClient()
+    const gmailUser = process.env.GMAIL_USER || 'diego.aguirre@verum.mx'
+
+    // iCal content
     const icsContent = [
       'BEGIN:VCALENDAR',
       'PRODID:-//Verum Mail//EN',
@@ -178,15 +181,12 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       `DTEND;TZID=${TIMEZONE}:${dtEndLocal}`,
       `SUMMARY:${fullTitle}`,
       `DESCRIPTION:${textForEmail.replace(/\n/g, '\\n')}`,
-      'ORGANIZER;CN=Verum Committee:mailto:onboarding@resend.dev',
+      `ORGANIZER;CN=PCR Verum:mailto:${gmailUser}`,
       `ATTENDEE;CN=Diego Aguirre;ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:${EMAIL_TO}`,
       'END:VEVENT',
       'END:VCALENDAR',
       '',
     ].join('\r\n')
-
-    const gmail = getGmailClient()
-    const gmailUser = process.env.GMAIL_USER || 'diego.aguirre@verum.mx'
 
     // Use nodemailer stream transport for MIME building only — not for sending
     const mimeTransport = nodemailer.createTransport({ streamTransport: true, newline: 'unix', buffer: true })
@@ -196,16 +196,20 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
       replyTo: sender_email || undefined,
       subject: fullTitle,
       html: htmlForEmail,
+      headers: {
+        'Content-Class': 'urn:content-classes:calendarmessage',
+      },
       attachments: [
         {
           filename: file.originalname,
           content: file.buffer,
         },
         {
-          filename: 'invitacion.ics',
-          content: Buffer.from(icsContent),
-          contentType: 'text/calendar;method=REQUEST',
+          filename: 'invite.ics',
+          content: icsContent,
+          contentType: 'text/calendar; method=REQUEST; charset=UTF-8',
           contentDisposition: 'inline',
+          contentTransferEncoding: 'base64',
         },
       ],
     })
