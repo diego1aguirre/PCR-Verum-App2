@@ -173,6 +173,11 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     const gmail = getGmailClient()
     const gmailUser = process.env.GMAIL_USER || 'diego.aguirre@verum.mx'
 
+    console.log('Raw date input:', date)
+    console.log('Raw time input:', time)
+    console.log('dtStartLocal:', dtStartLocal)
+    console.log('dtEndLocal:', dtEndLocal)
+
     // iCal content
     const icsContent = [
       'BEGIN:VCALENDAR',
