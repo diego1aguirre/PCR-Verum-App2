@@ -120,8 +120,10 @@ app.post('/api/mail/send', upload.single('pdf'), async (req, res) => {
     const [dateYear, dateMon, dateDay] = date.split('-')
     const [timeHour, timeMin] = time.split(':')
     const dtStartLocal = `${dateYear}${dateMon}${dateDay}T${timeHour.padStart(2, '0')}${timeMin.padStart(2, '0')}00`
-    const endHour = String((parseInt(timeHour, 10) + 1) % 24).padStart(2, '0')
-    const dtEndLocal = `${dateYear}${dateMon}${dateDay}T${endHour}${timeMin.padStart(2, '0')}00`
+    const totalMinutes = parseInt(timeHour, 10) * 60 + parseInt(timeMin, 10) + 30
+    const endHour = String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0')
+    const endMin = String(totalMinutes % 60).padStart(2, '0')
+    const dtEndLocal = `${dateYear}${dateMon}${dateDay}T${endHour}${endMin}00`
     const dtStamp = formatUtcDateForICS(new Date())
     const uid = `${Date.now()}@verum-mail`
 
