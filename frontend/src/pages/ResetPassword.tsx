@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import m from './Login.module.css'
 
@@ -10,6 +11,9 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -64,31 +68,51 @@ export default function ResetPassword() {
 
           <div className={m.field}>
             <label className={m.label} htmlFor="password">Nueva contraseña</label>
-            <input
-              id="password"
-              className="form-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              autoFocus
-              required
-            />
+            <div className={m.inputWrap}>
+              <input
+                id="password"
+                className={`form-input ${m.inputWithIcon}`}
+                type={showNewPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                autoFocus
+                required
+              />
+              <button
+                type="button"
+                className={m.eyeBtn}
+                onClick={() => setShowNewPassword((v) => !v)}
+                aria-label={showNewPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div className={m.field}>
             <label className={m.label} htmlFor="confirm">Confirmar contraseña</label>
-            <input
-              id="confirm"
-              className="form-input"
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              required
-            />
+            <div className={m.inputWrap}>
+              <input
+                id="confirm"
+                className={`form-input ${m.inputWithIcon}`}
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                className={m.eyeBtn}
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button className={m.submitBtn} type="submit" disabled={loading || !!successMsg}>

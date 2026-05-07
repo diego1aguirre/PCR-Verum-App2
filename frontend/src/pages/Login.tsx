@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import m from './Login.module.css'
 
@@ -13,6 +14,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   function switchMode(next: Mode) {
     setMode(next)
@@ -145,16 +149,26 @@ export default function Login() {
           {!isReset && (
             <div className={m.field}>
               <label className={m.label} htmlFor="password">Contraseña</label>
-              <input
-                id="password"
-                className="form-input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                required
-              />
+              <div className={m.inputWrap}>
+                <input
+                  id="password"
+                  className={`form-input ${m.inputWithIcon}`}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  required
+                />
+                <button
+                  type="button"
+                  className={m.eyeBtn}
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {/* Forgot password link — sign-in only */}
               {!isSignUp && (
                 <button
@@ -172,16 +186,26 @@ export default function Login() {
           {isSignUp && (
             <div className={m.field}>
               <label className={m.label} htmlFor="confirm">Confirmar contraseña</label>
-              <input
-                id="confirm"
-                className="form-input"
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="new-password"
-                required
-              />
+              <div className={m.inputWrap}>
+                <input
+                  id="confirm"
+                  className={`form-input ${m.inputWithIcon}`}
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  required
+                />
+                <button
+                  type="button"
+                  className={m.eyeBtn}
+                  onClick={() => setShowConfirm((v) => !v)}
+                  aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
           )}
 
