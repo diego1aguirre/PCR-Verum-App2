@@ -45,7 +45,8 @@ export default function ResetPassword() {
   return (
     <div className={m.page}>
       <div className={m.card}>
-        {/* Logo */}
+        <div className={m.cardInner}>
+        {/* Logo + tagline */}
         <div className={m.logoWrap}>
           <img
             src="https://pcrverum.mx/wp-content/uploads/2021/08/logo.cliente.png"
@@ -53,6 +54,7 @@ export default function ResetPassword() {
             className={m.logo}
           />
         </div>
+        <p className={m.tagline}>Plataforma interna de operaciones</p>
 
         <h2 className={m.title}>Nueva contraseña</h2>
 
@@ -93,6 +95,7 @@ export default function ResetPassword() {
             {loading ? 'Guardando…' : 'Guardar nueva contraseña'}
           </button>
         </form>
+        </div>{/* /cardInner */}
       </div>
     </div>
   )

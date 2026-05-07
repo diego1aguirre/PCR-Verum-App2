@@ -102,7 +102,8 @@ export default function Login() {
   return (
     <div className={m.page}>
       <div className={m.card}>
-        {/* Logo */}
+        <div className={m.cardInner}>
+        {/* Logo + tagline */}
         <div className={m.logoWrap}>
           <img
             src="https://pcrverum.mx/wp-content/uploads/2021/08/logo.cliente.png"
@@ -110,6 +111,7 @@ export default function Login() {
             className={m.logo}
           />
         </div>
+        <p className={m.tagline}>Plataforma interna de operaciones</p>
 
         {/* Mode title */}
         <h2 className={m.title}>
@@ -212,6 +214,7 @@ export default function Login() {
             </>
           )}
         </p>
+        </div>{/* /cardInner */}
       </div>
     </div>
   )
