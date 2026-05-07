@@ -5,6 +5,7 @@ import { supabase } from './lib/supabase'
 import { AuthContext } from './lib/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 import VerumMail from './pages/VerumMail'
 import Comunicado from './pages/Comunicado'
 import Reporte from './pages/Reporte'
@@ -37,11 +38,12 @@ export default function App() {
   return (
     <AuthContext.Provider value={user}>
       <Routes>
-        {/* Public route */}
+        {/* Public routes */}
         <Route
           path="/login"
           element={user ? <Navigate to="/convocar-comite" replace /> : <Login />}
         />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Protected routes — redirect to /login if not authenticated */}
         <Route

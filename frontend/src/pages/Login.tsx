@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import m from './Login.module.css'
 
-type Mode = 'signin' | 'signup'
+type Mode = 'signin' | 'signup' | 'reset'
 
 export default function Login() {
   const [mode, setMode] = useState<Mode>('signin')
@@ -27,8 +27,12 @@ export default function Login() {
     setError(null)
     setSuccessMsg(null)
 
-    // Domain restriction — enforced on both modes (error is intentionally generic)
+    // Domain restriction — enforced on all modes (error is intentionally generic)
     if (!email.trim().toLowerCase().endsWith('@verum.mx')) {
+      if (mode === 'reset') {
+        setSuccessMsg('Revisa tu correo para restablecer tu contraseña.')
+        return
+      }
       setError(
         mode === 'signin'
           ? 'Correo o contraseña incorrectos.'
@@ -57,7 +61,7 @@ export default function Login() {
         })
         if (authError) throw authError
         // onAuthStateChange in App.tsx handles the redirect
-      } else {
+      } else if (mode === 'signup') {
         const { error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -66,21 +70,34 @@ export default function Login() {
         setSuccessMsg('Revisa tu correo para confirmar tu cuenta.')
         setPassword('')
         setConfirm('')
+      } else {
+        // reset
+        const { error: authError } = await supabase.auth.resetPasswordForEmail(
+          email.trim(),
+          { redirectTo: window.location.origin + '/reset-password' },
+        )
+        if (authError) throw authError
+        setSuccessMsg('Revisa tu correo para restablecer tu contraseña.')
       }
     } catch (err) {
-      setError(
-        err instanceof Error && err.message
-          ? err.message
-          : mode === 'signin'
-          ? 'Credenciales incorrectas. Inténtalo de nuevo.'
-          : 'No se pudo crear la cuenta. Inténtalo de nuevo.',
-      )
+      if (mode === 'reset') {
+        setSuccessMsg('Revisa tu correo para restablecer tu contraseña.')
+      } else {
+        setError(
+          err instanceof Error && err.message
+            ? err.message
+            : mode === 'signin'
+            ? 'Credenciales incorrectas. Inténtalo de nuevo.'
+            : 'No se pudo crear la cuenta. Inténtalo de nuevo.',
+        )
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const isSignUp = mode === 'signup'
+  const isReset = mode === 'reset'
 
   return (
     <div className={m.page}>
@@ -96,14 +113,14 @@ export default function Login() {
 
         {/* Mode title */}
         <h2 className={m.title}>
-          {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+          {isSignUp ? 'Crear cuenta' : isReset ? 'Recuperar contraseña' : 'Iniciar sesión'}
         </h2>
 
         <form className={m.form} onSubmit={handleSubmit}>
           {/* Error */}
           {error && <div className={m.error}>{error}</div>}
 
-          {/* Success (sign-up confirmation) */}
+          {/* Success */}
           {successMsg && <div className={m.success}>{successMsg}</div>}
 
           {/* Email */}
@@ -122,20 +139,32 @@ export default function Login() {
             />
           </div>
 
-          {/* Password */}
-          <div className={m.field}>
-            <label className={m.label} htmlFor="password">Contraseña</label>
-            <input
-              id="password"
-              className="form-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete={isSignUp ? 'new-password' : 'current-password'}
-              required
-            />
-          </div>
+          {/* Password — hidden in reset mode */}
+          {!isReset && (
+            <div className={m.field}>
+              <label className={m.label} htmlFor="password">Contraseña</label>
+              <input
+                id="password"
+                className="form-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                required
+              />
+              {/* Forgot password link — sign-in only */}
+              {!isSignUp && (
+                <button
+                  type="button"
+                  className={m.forgotLink}
+                  onClick={() => switchMode('reset')}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Confirm password — sign-up only */}
           {isSignUp && (
@@ -156,14 +185,18 @@ export default function Login() {
 
           <button className={m.submitBtn} type="submit" disabled={loading}>
             {loading
-              ? isSignUp ? 'Creando cuenta…' : 'Iniciando sesión…'
-              : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+              ? isReset ? 'Enviando…' : isSignUp ? 'Creando cuenta…' : 'Iniciando sesión…'
+              : isReset ? 'Enviar enlace de recuperación' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
           </button>
         </form>
 
-        {/* Mode toggle */}
+        {/* Mode toggle / back link */}
         <p className={m.toggle}>
-          {isSignUp ? (
+          {isReset ? (
+            <button type="button" className={m.toggleLink} onClick={() => switchMode('signin')}>
+              Volver al inicio de sesión
+            </button>
+          ) : isSignUp ? (
             <>
               ¿Ya tienes cuenta?{' '}
               <button type="button" className={m.toggleLink} onClick={() => switchMode('signin')}>
