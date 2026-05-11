@@ -182,36 +182,18 @@ export default function VerumMail() {
   // ── Recipients ──────────────────────────────────────────────────────────────
 
   async function handleAddRecipient() {
-    const normalizedEmail = newEmail.trim().toLowerCase()
+    const trimmedEmail = newEmail.trim()
     const trimmedName = newName.trim()
-    if (!normalizedEmail) return
-
-    // Case-insensitive duplicate check against already-loaded list
-    if (recipients.some((r) => r.email.toLowerCase() === normalizedEmail)) {
-      setRecipientStatus({ type: 'err', text: 'Este correo ya está registrado en la lista.' })
-      return
-    }
-
+    if (!trimmedEmail) return
     setRecipientStatus(null)
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/mail/recipients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: trimmedName, email: normalizedEmail }),
+        body: JSON.stringify({ name: trimmedName, email: trimmedEmail }),
       })
       const data: Recipient = await res.json()
-
-      // Catch unique-violation surfaced by the API (race condition / DB constraint)
-      if (!res.ok) {
-        const errMsg: string = (data as unknown as { error: string }).error ?? ''
-        if (res.status === 409 || errMsg.includes('23505') || errMsg.toLowerCase().includes('duplicate') || errMsg.toLowerCase().includes('already')) {
-          setRecipientStatus({ type: 'err', text: 'Este correo ya está registrado en la lista.' })
-        } else {
-          throw new Error(errMsg || `Error ${res.status}`)
-        }
-        return
-      }
-
+      if (!res.ok) throw new Error((data as unknown as { error: string }).error)
       setRecipients((prev) => [...prev, data])
       setNewName('')
       setNewEmail('')
