@@ -36,12 +36,24 @@ function ext(filename: string) {
   return dot >= 0 ? filename.slice(dot + 1).toUpperCase() : ''
 }
 
+/** Normalise a user-supplied filename to a .pdf download name.
+ *  "" | whitespace → "merged.pdf"
+ *  "reporte"       → "reporte.pdf"
+ *  "reporte.pdf"   → "reporte.pdf"
+ *  "reporte.PDF"   → "reporte.pdf"
+ */
+function computeOutputFilename(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return 'merged.pdf'
+  return trimmed.replace(/\.pdf$/i, '') + '.pdf'
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function MergePDF() {
   const [queue, setQueue] = useState<QueueEntry[]>([])
   const [enumerate, setEnumerate] = useState(true)
-  const [outputName, setOutputName] = useState('merged_output.pdf')
+  const [outputName, setOutputName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -111,9 +123,11 @@ export default function MergePDF() {
     setError(null)
     setSuccessMsg(null)
 
+    const finalFilename = computeOutputFilename(outputName)
+
     const formData = new FormData()
     formData.append('enumerate', enumerate ? '1' : '0')
-    formData.append('output_name', outputName.trim() || 'merged_output.pdf')
+    formData.append('output_name', finalFilename)
     for (const entry of queue) {
       formData.append('files', entry.file)
     }
@@ -138,7 +152,7 @@ export default function MergePDF() {
       const blob = await res.blob()
       const filename = filenameFromDisposition(
         res.headers.get('Content-Disposition'),
-        outputName.trim() || 'merged_output.pdf',
+        finalFilename,
       )
       triggerDownload(blob, filename)
       setSuccessMsg('Descarga iniciada.')
@@ -258,7 +272,7 @@ export default function MergePDF() {
             type="text"
             value={outputName}
             onChange={(e) => setOutputName(e.target.value)}
-            placeholder="merged_output.pdf"
+            placeholder="Nombre del archivo (opcional)"
           />
         </div>
 

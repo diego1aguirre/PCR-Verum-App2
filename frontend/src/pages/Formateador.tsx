@@ -34,7 +34,7 @@ export default function Formateador() {
   const [dragging, setDragging] = useState(false)
   const [wantPlain, setWantPlain] = useState(true)
   const [wantPdf, setWantPdf] = useState(true)
-  const [outputName, setOutputName] = useState('ComPrensa_')
+  const [outputName, setOutputName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -92,10 +92,12 @@ export default function Formateador() {
     setLoading(true)
     setError(null)
 
-    // Resolve output base name — fall back to file's own name if field is blank or just the prefix
+    // Resolve base name: strip any trailing .pdf/.docx from user input so the
+    // correct extension can be appended per output type below.
+    // Empty input falls back to the uploaded file's own stem.
     const trimmedName = outputName.trim()
-    const baseName = (trimmedName && trimmedName !== 'ComPrensa_')
-      ? trimmedName
+    const baseName = trimmedName
+      ? trimmedName.replace(/\.(pdf|docx)$/i, '')
       : file.name.replace(/\.docx$/i, '')
 
     // Build list of requests — one per selected output, each triggers its own download
@@ -215,12 +217,8 @@ export default function Formateador() {
             type="text"
             value={outputName}
             onChange={(e) => setOutputName(e.target.value)}
-            placeholder="ComPrensa_"
+            placeholder="Nombre del archivo (opcional)"
             autoComplete="off"
-            onFocus={(e) => {
-              const len = e.target.value.length
-              e.target.setSelectionRange(len, len)
-            }}
           />
         </div>
 
