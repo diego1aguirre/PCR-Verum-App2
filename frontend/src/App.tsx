@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import { AuthContext } from './lib/AuthContext'
@@ -16,21 +16,34 @@ import Configuracion from './pages/Configuracion'
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    // Check existing session on mount
+    // getSession() automatically processes any auth tokens in the URL hash
+    // when the client is configured with detectSessionInUrl + flowType:'implicit'.
+    // The loading=true / return null above ensures no redirect fires before this
+    // resolves, so signup confirmation and recovery links always land correctly.
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
+      // Remove processed tokens from the URL so they don't persist in history
+      if (window.location.hash) {
+        window.history.replaceState({}, '', window.location.pathname + window.location.search)
+      }
     })
 
-    // Listen for auth state changes (login / logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth state changes (login / logout / password recovery)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
+      // Password-reset links carry type=recovery — once the session is established
+      // redirect to the reset-password page so the user can set their new password.
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/reset-password', { replace: true })
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Wait for initial session check before rendering anything
   if (loading) return null
