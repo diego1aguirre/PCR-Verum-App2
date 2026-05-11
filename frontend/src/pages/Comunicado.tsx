@@ -143,23 +143,36 @@ export default function Comunicado() {
   // ── Recipients ──────────────────────────────────────────────────────────────
 
   async function handleAddRecipient() {
-    const trimmedEmail = newEmail.trim()
+    const normalizedEmail = newEmail.trim().toLowerCase()
     const trimmedName = newName.trim()
-    if (!trimmedEmail) return
-    if (recipients.some((r) => r.email === trimmedEmail)) {
-      setNewEmail('')
-      setNewName('')
+    if (!normalizedEmail) return
+
+    // Case-insensitive duplicate check against already-loaded list
+    if (recipients.some((r) => r.email.toLowerCase() === normalizedEmail)) {
+      setRecipientStatus({ type: 'err', text: 'Este correo ya está registrado en la lista.' })
       return
     }
+
     setRecipientStatus(null)
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/calificacion/recipients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: trimmedName, email: trimmedEmail }),
+        body: JSON.stringify({ name: trimmedName, email: normalizedEmail }),
       })
       const data: Recipient = await res.json()
-      if (!res.ok) throw new Error((data as unknown as { error: string }).error)
+
+      // Catch unique-violation surfaced by the API (race condition / DB constraint)
+      if (!res.ok) {
+        const errMsg: string = (data as unknown as { error: string }).error ?? ''
+        if (res.status === 409 || errMsg.includes('23505') || errMsg.toLowerCase().includes('duplicate') || errMsg.toLowerCase().includes('already')) {
+          setRecipientStatus({ type: 'err', text: 'Este correo ya está registrado en la lista.' })
+        } else {
+          throw new Error(errMsg || `Error ${res.status}`)
+        }
+        return
+      }
+
       setRecipients((prev) => [...prev, data])
       setNewName('')
       setNewEmail('')
