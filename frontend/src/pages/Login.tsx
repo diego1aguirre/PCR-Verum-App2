@@ -66,14 +66,17 @@ export default function Login() {
         if (authError) throw authError
         // onAuthStateChange in App.tsx handles the redirect
       } else if (mode === 'signup') {
-        const { error: authError } = await supabase.auth.signUp({
+        const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
         })
         if (authError) throw authError
-        setSuccessMsg('Revisa tu correo para confirmar tu cuenta.')
-        setPassword('')
-        setConfirm('')
+        // Email confirmation is disabled — Supabase returns a session immediately.
+        // onAuthStateChange in App.tsx picks it up and redirects to /convocar-comite.
+        if (!data.session) {
+          throw new Error('No se pudo crear la sesión. Inténtalo de nuevo.')
+        }
+        // No success message needed — the auth state change handles the redirect.
       } else {
         // reset
         const { error: authError } = await supabase.auth.resetPasswordForEmail(
