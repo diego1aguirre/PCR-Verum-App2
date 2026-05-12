@@ -134,7 +134,7 @@ export default function Formateador() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Formateador de Comunicados</h1>
+      <h1 className={styles.title}>Archivos Comunicado</h1>
 
       <form className="card" onSubmit={handleSubmit}>
 
